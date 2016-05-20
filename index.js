@@ -45,21 +45,17 @@ var userPassRegExp = /^([^:]*):(.*)$/
  * @public
  */
 
-function auth(req,mode) {
+function auth(req, mode) {
   if (!req) {
     throw new TypeError('argument req is required')
   }
-  var authHeader ='';
-  switch ((mode||'').toLowerCase()) {
-    case 'proxy':
-      authHeader='proxy-authorization';
-      break;
-    default:
-      authHeader = 'authorization';
+
+  if (typeof req !== 'object') {
+    throw new TypeError('argument req is required to be an object')
   }
 
   // get header
-  var header = (req.req || req).headers[authHeader]
+  var header = getAuthorization(req.req || req, mode)
 
   // parse header
   var match = credentialsRegExp.exec(header || '')
@@ -86,6 +82,26 @@ function auth(req,mode) {
 
 function decodeBase64(str) {
   return new Buffer(str, 'base64').toString()
+}
+
+/**
+ * Get the Authorization header from request object.
+ * @private
+ */
+
+function getAuthorization(req, mode) {
+  if (!req.headers || typeof req.headers !== 'object') {
+    throw new TypeError('argument req is required to have headers property')
+  }
+
+  var authHeader ='authorization';
+  switch ((mode||'').toLowerCase()) {
+    case 'proxy':
+      authHeader='proxy-authorization';
+      break;
+  }
+
+  return req.headers[authHeader]
 }
 
 /**
